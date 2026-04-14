@@ -7,30 +7,33 @@ import java.awt.Graphics2D;
 
 import javax.swing.JPanel;
 
+import entity.Player;
+
 public class GamePanel extends JPanel implements Runnable {
 
 	// SCREEN SETTINGS
 	final int originalTileSize = 16; // 16x16 tile
 	final int scale = 3;
 
-	final int tileSize = originalTileSize * scale; // 48x48 tile
+	public final int tileSize = originalTileSize * scale; // 48x48 tile
 	final int maxScreenCol = 16;
 	final int maxScreenRow = 12;
 	final int screenWidth = tileSize * maxScreenCol; // 768 px
 	final int screenHeight = tileSize * maxScreenRow; // 576 px
 
-	//FPS 
+	// FPS
 	int FPS = 120;
-	
+
 	KeyHandler keyH = new KeyHandler();
-	
+
 	Thread gameThread;
+	Player player = new Player(this, keyH);
 
 	// SET player's default position
 	int playerX = 100;
 	int playerY = 100;
-	int playerSpeed= 4;
-	
+	int playerSpeed = 4;
+
 	public GamePanel() {
 
 		this.setPreferredSize(new Dimension(screenWidth, screenHeight));
@@ -38,7 +41,6 @@ public class GamePanel extends JPanel implements Runnable {
 		this.setDoubleBuffered(true);
 		this.addKeyListener(keyH);
 		this.setFocusable(true);
-		
 
 	}
 
@@ -51,53 +53,77 @@ public class GamePanel extends JPanel implements Runnable {
 	/**
 	 * 
 	 */
+//	public void run() {
+//
+//		// DETERMINES how quickly to draw each frame
+//		double drawInterval = 1000000000/FPS;
+//		// Tells the program when the next draw interval is
+//		double nextDrawTime = System.nanoTime() + drawInterval;
+//		
+//		
+//		while (gameThread != null) {
+//			
+//
+//			update();
+//
+//			repaint();
+//
+//			try {
+//				
+//				double remainingTime = nextDrawTime - System.nanoTime();
+//				remainingTime = remainingTime/1000000;
+//				
+//				if(remainingTime < 0) {
+//					remainingTime = 0;
+//				}
+//				
+//				Thread.sleep((long)remainingTime);
+//
+//				nextDrawTime += drawInterval;
+//				
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			
+//			}
+//		}
+//			
+//
+//	}
+
+	/**
+	 * 
+	 */
 	@Override
 	public void run() {
 
-		// DETERMINES how quickly to draw each frame
-		double drawInterval = 1000000000/FPS;
-		// Tells the program when the next draw interval is
-		double nextDrawTime = System.nanoTime() + drawInterval;
-		
-		
+		double drawInterval = 1000000000 / FPS;
+		double delta = 0;
+		long lastTime = System.nanoTime();
+		long currentTime;
+
 		while (gameThread != null) {
-			
 
-			update();
+			currentTime = System.nanoTime();
 
-			repaint();
+			delta += (currentTime - lastTime) / drawInterval;
 
-			try {
-				
-				double remainingTime = nextDrawTime - System.nanoTime();
-				Thread.sleep((long)remainingTime);
+			lastTime = currentTime;
 
-				
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			
+			if (delta >= 1) {
+				update();
+				repaint();
+				delta--;
 			}
+
 		}
-			
 
 	}
 
 	public void update() {
 
-		if (keyH.upPressed == true) {
-			playerY -= playerSpeed;
-		}
-		else if (keyH.downPressed == true) {
-			playerY += playerSpeed;
-	
-		}
-		else if (keyH.leftPressed == true) {
-			playerX -= playerSpeed;
-		}
-		else if (keyH.rightPressed == true) {
-			playerX += playerSpeed;
-		}
+		player.update();
 		
+
 	}
 
 	public void paintComponent(Graphics g) {
@@ -106,11 +132,10 @@ public class GamePanel extends JPanel implements Runnable {
 
 		Graphics2D g2 = (Graphics2D) g;
 
-		g2.setColor(Color.white);
-		g2.fillRect(playerX, playerY, tileSize, tileSize);
+		player.draw(g2);
 		
 		g2.dispose();
-		
+
 	}
 
 }
